@@ -1,0 +1,56 @@
+# Root Hydra config for LangVAE FineWeb VAE training.
+#
+# Usage:
+#   # Local single-GPU
+#   python train.py
+#
+#   # Local multi-GPU (torchrun)
+#   torchrun --nproc_per_node=4 train.py
+#
+#   # Single SLURM job — launcher auto-detected from CC_CLUSTER env var
+#   python train.py
+#
+#   # Single SLURM job — explicit launcher
+#   python train.py hydra/launcher=fir
+#
+#   # Hyperparameter sweep on SLURM
+#   python train.py --multirun latent_size=128,256 n_cycles=10,20 hydra/launcher=fir
+
+defaults:
+  - _self_
+
+hydra:
+  run:
+    dir: logs/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: logs/hydra/M${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
+
+# ─── Model ────────────────────────────────────────────────────────────────────
+encoder_model: google/flan-t5-base
+decoder_model: meta-llama/Llama-3.2-3B
+latent_size: 128
+
+# ─── Data ─────────────────────────────────────────────────────────────────────
+max_sent_len: 128       # maximum span length in tokens; matches STAR-LDM MAX_LENGTH
+min_sent_len: 16        # minimum span length in tokens
+num_train: 5_000_000   # samples per epoch (random with replacement)
+num_eval: 50_000        # eval samples per epoch
+num_dataloader_workers: 8
+copy_dataset_to_tmpdir: false  # copy FineWeb to SLURM_TMPDIR before training (rank 0 copies, others wait)
+
+# ─── Training ─────────────────────────────────────────────────────────────────
+num_epochs: 5
+batch_size: 64          # per device; effective = batch_size * num_gpus
+learning_rate: 1.0e-3
+optimizer: AdamW
+scheduler: ReduceLROnPlateau
+scheduler_patience: 2   # epochs; with 5 total, patience=2 allows 1-2 LR reductions
+scheduler_factor: 0.5
+steps_saving: 5         # save checkpoint every N epochs
+
+# ─── KL annealing ─────────────────────────────────────────────────────────────
+start_beta: 0.0
+max_beta: 1.0
+n_cycles: 10            # fewer, longer cycles reduce collapse risk vs. default 40
+target_kl: 2.0          # published default for 128-dim; scale up if latent underused

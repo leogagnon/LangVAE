@@ -36,5 +36,6 @@ AUTOMODEL_MAP = {
     "Salesforce/SFR-Embedding-2_R": {"cls": "AutoModel", "pooling_method": PoolingMethod.LAST, "normalize": True},
     "intfloat/multilingual-e5-large-instruct": {"cls": "AutoModel", "pooling_method": PoolingMethod.MEAN, "normalize": True},
     "Alibaba-NLP/gte-Qwen2-1.5B-instruct": {"cls": "AutoModel", "pooling_method": PoolingMethod.LAST, "normalize": True},
-    "NovaSearch/stella_en_1.5B_v5": {"cls": "AutoModel", "pooling_method": PoolingMethod.MEAN, "normalize": True}
+    "NovaSearch/stella_en_1.5B_v5": {"cls": "AutoModel", "pooling_method": PoolingMethod.MEAN, "normalize": True},
+    "sentence-transformers/sentence-t5-xl": {"cls": "AutoModel", "pooling_method": PoolingMethod.MEAN, "normalize": True},
 }

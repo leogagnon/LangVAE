@@ -1,0 +1,23 @@
+# FIR cluster launcher (4 × H100 80 GB per node).
+# Submitit launches one SLURM task per GPU; train.py maps SLURM rank vars
+# to the env vars torch.distributed expects, then calls main() directly.
+defaults:
+  - submitit_slurm
+
+mem_gb: 300
+gres: gpu:h100:4
+tasks_per_node: 4
+cpus_per_task: 12
+timeout_min: 719
+account: rrg-bengioy-ad
+array_parallelism: 32
+additional_parameters:
+  no-requeue: true
+  signal: B:TERM@300
+
+setup:
+  - "source ~/links/scratch/LangVAE/.venv/bin/activate"
+  - "export TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=3600"
+  - "export TORCH_NCCL_ASYNC_ERROR_HANDLING=1"
+  - "export TORCH_DISTRIBUTED_DEBUG=DETAIL"
+  - "export TOKENIZERS_PARALLELISM=false"
